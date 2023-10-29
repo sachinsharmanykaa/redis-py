@@ -1826,7 +1826,10 @@ class BasicKeyCommands(CommandsProtocol):
 
         For more information see https://redis.io/commands/get
         """
-        return self.execute_command("GET", name)
+        data = self.execute_command("GET", name)
+        from redis.compress import Lz4
+        import json
+        return json.loads(Lz4().decompress(data).decode('utf-8'))
 
     def getdel(self, name: KeyT) -> ResponseT:
         """
@@ -2296,6 +2299,9 @@ class BasicKeyCommands(CommandsProtocol):
 
         For more information see https://redis.io/commands/set
         """
+        from redis.compress import Lz4
+        import json
+        value = Lz4().compress(json.dumps(value).encode('utf-8'))
         pieces: list[EncodableT] = [name, value]
         options = {}
         if ex is not None:
